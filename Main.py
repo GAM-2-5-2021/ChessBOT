@@ -1,5 +1,5 @@
 import pygame as p
-import Engine
+import Engine, SmartMoveFinder
 
 WIDTH = HEIGHT = 512
 DIMENSION = 8
@@ -26,12 +26,15 @@ def main():
     sqSelected = ()
     playerClicks = []
     gameOver = False
+    playerOne = True
+    playerTwo = False
     while running:
+        humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
         for i in p.event.get():
             if i.type == p.QUIT:
                 running = False
             elif i.type == p.MOUSEBUTTONDOWN:
-                if not gameOver:
+                if not gameOver and humanTurn:
                     location = p.mouse.get_pos()
                     col = location[0]//SQ_SIZE
                     row = location[1]//SQ_SIZE
@@ -66,6 +69,12 @@ def main():
                     playerClicks = []
                     moveMade = False
                     animate = False
+                    
+        if not gameOver and not humanTurn:
+            AIMove = SmartMoveFinder.findRandomMove(validMoves)
+            gs.makeMove(AIMove)
+            moveMade = True
+            animate = True
                     
         if moveMade:
             if animate:
@@ -142,11 +151,11 @@ def animateMove(move, screen, board, clock):
         clock.tick(60)
     
 def drawText(screen, text):
-    font = p.font.SysFont("Helvitca", 32, True, False)
-    textObject = font.render(text, 0, p.Color("Gray"))
+    font = p.font.SysFont("Mk.ttf", 50, True, False)
+    textObject = font.render(text, 0, p.Color(255, 100, 100))
     textLocation = p.Rect(0, 0, WIDTH, HEIGHT).move(WIDTH/2 - textObject.get_width()/2, HEIGHT/2 - textObject.get_height()/2)
     screen.blit(textObject, textLocation)
-    textObject = font.render(text, 0, p.Color("Black"))
+    textObject = font.render(text, 0, p.Color("Red"))
     screen.blit(textObject, textLocation.move(2, 2))
     
     
