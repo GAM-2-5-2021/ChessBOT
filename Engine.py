@@ -21,11 +21,12 @@ class GameState():
         self.checkmate = False
         self.stalemate = False
         self.enPassantPossible = ()
+        self.enPassantPossibleLog = [self.enPassantPossible]
         self.whiteCastleKingside = True
         self.whiteCastleQueenside = True
         self.blackCastleKingside = True
         self.blackCastleQueenside = True
-        self.castleRightsLog = [CastleRights(self.whiteCastleKingside, self.blackCastleKingside, self.whiteCastleQueenside, self.blackCastleQueenside)]
+        self.castleRightsLog = [CastleRights(self.whiteCastleKingside, self.blackCastleKingside, self.whiteCastleQueenside, self.blackCastleQueenside)]    
         
     def makeMove(self, move):
         self.board[move.endRow][move.endCol] = move.pieceMoved
@@ -43,7 +44,7 @@ class GameState():
         if move.enPassant:
             self.board[move.startRow][move.endCol] = "--"
         if move.pawnPromotion:
-            promotedPiece = input("Promote to Q, R, B or N:")
+            promotedPiece = "Q"
             self.board[move.endRow][move.endCol] = move.pieceMoved[0] + promotedPiece
         self.updateCastleRights(move)
         self.castleRightsLog.append(CastleRights(self.whiteCastleKingside, self.blackCastleKingside, self.whiteCastleQueenside, self.blackCastleQueenside))
@@ -53,7 +54,8 @@ class GameState():
                 self.board[move.endRow][move.endCol + 1] = "--"
             else:
                 self.board[move.endRow][move.endCol + 1] = self.board[move.endRow][move.endCol - 2]
-                self.board[move.endRow][move.endCol - 2] = "--"     
+                self.board[move.endRow][move.endCol - 2] = "--"
+        self.enPassantPossibleLog.append(self.enPassantPossible)
         
     def undoMove(self):
         if len(self.moveLog) != 0:
@@ -68,9 +70,9 @@ class GameState():
             if move.enPassant:
                 self.board[move.endRow][move.endCol] = "--"
                 self.board[move.startRow][move.endCol] = move.pieceCaptured
-                self.enPassantPossible = (move.endRow, move.endCol)
-            if move.pieceMoved[1] == "p" and abs(move.startRow - move.endRow) == 2:
-                self.enPassantPossible = ()
+               
+            self.enPassantPossibleLog.pop()
+            self.enPassantPossible = self.enPassantPossibleLog[-1]
             self.castleRightsLog.pop()
             castleRights = self.castleRightsLog[-1]
             self.whiteCastleKingside = castleRights.wks
@@ -84,6 +86,8 @@ class GameState():
                 else:
                     self.board[move.endRow][move.endCol - 2] = self.board[move.endRow][move.endCol + 1]
                     self.board[move.endRow][move.endCol + 1] = "--"
+            self.checkmate = False
+            self.stalemate = False
     
     def getValidMoves(self):
         moves = []
@@ -329,7 +333,6 @@ class GameState():
     def getCastleMoves(self, r, c, moves, allyColor):
         inCheck = self.squareUnderAttack(r, c, allyColor)
         if inCheck:
-            print("oof")
             return
         if (self.whiteToMove and self.whiteCastleKingside) or (not self.whiteToMove and self.blackCastleKingside):
             self.getKingsideCastleMoves(r, c, moves, allyColor)
@@ -483,6 +486,7 @@ class Move():
         self.castle = castle
         if enPassant:
             self.pieceCaptured = "bp" if self.pieceMoved == "wp" else "wp"
+        self.isCapture = self.pieceCaptured != "--"
         self.moveID = self.startRow * 1000 + self.startCol * 100 + self.endRow * 10 + self.endCol
         
     def __eq__(self, other):
@@ -495,6 +499,20 @@ class Move():
  
     def getRankFile(self, r, c):
         return self.colsToFiles[c] + self.rowsToRanks[r]
+        
+    def __str__(self):
+        if self.castle:
+            return "O-O" if self.endCol == 6 else "O-O-O"
+        endSquare = self.getRankFile(self.endRow, self.endCol)
+        if self.pieceMoved[1] == "p":
+            if self.isCapture:
+                return self.colsToFiles[self.startCol] + "x" + endSquare
+            else:
+                return endSquare
+        moveString = self.pieceMoved[1]
+        if self.isCapture:
+            moveString += "x"
+        return moveString + endSquare
         
         
         
