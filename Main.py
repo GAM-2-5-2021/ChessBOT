@@ -3,7 +3,7 @@ import Engine, SmartMoveFinder
 from multiprocessing import Process, Queue
 
 BOARD_WIDTH = BOARD_HEIGHT = 512
-MOVE_LOG_PANEL_WIDTH = 250
+MOVE_LOG_PANEL_WIDTH = 300
 MOVE_LOG_PANEL_HEIGHT = BOARD_HEIGHT
 DIMENSION = 8
 SQ_SIZE = BOARD_HEIGHT // DIMENSION
@@ -53,7 +53,6 @@ def main():
                         playerClicks.append(sqSelected)
                     if len(playerClicks) == 2 and humanTurn:
                         move = Engine.Move(playerClicks[0], playerClicks[1], gs.board)
-                        print(move.getChessNotation())
                         for i in range(len(validMoves)):
                             if move == validMoves[i]:
                                 gs.makeMove(validMoves[i])
@@ -90,12 +89,10 @@ def main():
         if not gameOver and not humanTurn and not moveUndone:
             if not AIThinking:
                 AIThinking = True
-                print("thinking...")
                 returnQueue = Queue()
                 moveFinderProcess = Process(target = SmartMoveFinder.findBestMove, args = (gs, validMoves, returnQueue))
                 moveFinderProcess.start()
             if not moveFinderProcess.is_alive():
-                print("done thinking")
                 AIMove = returnQueue.get()
                 if AIMove is None:
                     AIMove = SmartMoveFinder.findRandomMove(validMoves)
@@ -164,7 +161,7 @@ def drawMoveLog(screen, gs, font):
         if i + 1 < len(moveLog):
             moveString += str(moveLog[i + 1]) + "  "
         moveTexts.append(moveString)
-    movesPerRow = 3
+    movesPerRow = 4
     padding = 5
     lineSpacing = 2
     textY = padding
