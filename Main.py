@@ -132,6 +132,12 @@ def drawBoard(screen):
             p.draw.rect(screen, color, p.Rect(e*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
     
 def highlightSquares(screen, gs, validMoves, sqSelected):
+    if (len(gs.moveLog)) > 0:
+        lastMove = gs.moveLog[-1]
+        s = p.Surface((SQ_SIZE, SQ_SIZE))
+        s.set_alpha(100)
+        s.fill(p.Color('green'))
+        screen.blit(s, (lastMove.endCol * SQ_SIZE, lastMove.endRow * SQ_SIZE))    
     if sqSelected != ():
         r, c = sqSelected
         if gs.board[r][c][0] == ("w" if gs.whiteToMove else "b"):
